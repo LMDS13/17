@@ -245,10 +245,9 @@
 </head>
 <body>
 
-    <!-- Música de fondo: se reproduce automáticamente al iniciar el preloader -->
+    <!-- Música de fondo: se intenta reproducir automáticamente al cargar -->
     <audio id="bg-music" loop preload="auto" style="display: none;">
-        <!-- Cambia el src por la ruta de tu archivo de música -->
-        <source src="aura.mp3" type="audio/mpeg">
+        <source src="aura.mp3" type="audio/mpeg" onerror="console.warn('No se pudo cargar aura.mp3. Asegúrate de que el archivo existe.')">
         Tu navegador no soporta audio.
     </audio>
 
@@ -332,13 +331,22 @@
             }
 
             async function startPreloader() {
-                // Intentar reproducir música automáticamente
+                // Esperar a que el audio esté listo para reproducir
+                if (bgMusic.readyState < 3) {
+                    await new Promise((resolve) => {
+                        bgMusic.addEventListener('canplaythrough', resolve, { once: true });
+                        // Si después de 3 segundos no carga, seguir igual
+                        setTimeout(resolve, 3000);
+                    });
+                }
+
+                // Intentar reproducción automática
                 try {
                     await bgMusic.play();
+                    console.log("Música iniciada automáticamente.");
                 } catch (err) {
-                    // El autoplay fue bloqueado: la música se iniciará con el primer clic/toque
-                    console.log("Autoplay bloqueado. La música comenzará con la interacción del usuario.");
-                    // Agregamos un listener global para iniciar la reproducción en la primera interacción
+                    console.log("Autoplay bloqueado. La música comenzará con la primera interacción.");
+                    // Listener para el primer toque/clic del usuario
                     const resumeAudio = () => {
                         bgMusic.play().catch(() => {});
                         document.removeEventListener('click', resumeAudio);
@@ -348,6 +356,7 @@
                     document.addEventListener('touchstart', resumeAudio);
                 }
 
+                // Ejecutar frases del preloader
                 for (const phrase of phrases) {
                     await typePhrase(phraseEl, phrase);
                 }
@@ -781,12 +790,18 @@
         }
         animate();
 
-        // ========== GSAP Y UI ==========
+        // ========== GSAP Y UI (con refuerzo de reproducción) ==========
         const startBtn = document.getElementById('start-btn');
         const entryScreen = document.getElementById('entry-screen');
         const mainCard = document.getElementById('main-card');
         const uiElems = document.querySelectorAll('.ui-elem');
         startBtn.addEventListener('click', () => {
+            // Forzar la música si aún no ha comenzado (respaldo para móviles)
+            const bgMusic = document.getElementById('bg-music');
+            if (bgMusic && bgMusic.paused) {
+                bgMusic.play().catch(() => {});
+            }
+
             entryScreen.style.opacity = '0';
             setTimeout(() => { entryScreen.style.display = 'none'; }, 1500);
             gsap.to(camera.position, { z: 26, y: 6, duration: 3.5, ease: "power3.inOut" });
