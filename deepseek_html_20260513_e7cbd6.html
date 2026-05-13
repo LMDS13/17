@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Invitación - 17 Cumpleaños | Agujero Negro Realista</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (for layout utility) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        :root {
+            --primary-glow: #8a2be2;
+            --secondary-glow: #4b0082;
+            --text-main: #e0e0ff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Rajdhani', sans-serif;
+            color: var(--text-main);
+        }
+
+        /* Three.js Canvas */
+        #bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Preloader */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+            transition: opacity 0.8s ease;
+        }
+        .preloader-content {
+            text-align: center;
+            max-width: 90%;
+        }
+        .preloader-phrase {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            color: #b388ff;
+            text-shadow: 0 0 20px rgba(138, 43, 226, 0.6);
+            min-height: 2.5em;
+        }
+        @media (max-width: 768px) {
+            .preloader-phrase {
+                font-size: 1.3rem;
+                letter-spacing: 0.1em;
+            }
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        /* Entry Screen */
+        #entry-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: auto;
+        }
+
+        .btn-enter {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            padding: 15px 40px;
+            background: transparent;
+            color: #fff;
+            border: 2px solid rgba(138, 43, 226, 0.5);
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+        }
+
+        .btn-enter:hover {
+            background: rgba(138, 43, 226, 0.2);
+            border-color: #8a2be2;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.6), inset 0 0 15px rgba(138, 43, 226, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Main Content */
+        .content-container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+            background: rgba(10, 5, 20, 0.4);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(138, 43, 226, 0.1);
+            opacity: 0;
+            transform: translateY(50px);
+            pointer-events: auto;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #b388ff, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: #a9a9ff;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 1.5rem 0;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .detail-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #b388ff;
+            filter: drop-shadow(0 0 5px rgba(138,43,226,0.8));
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.2rem;
+        }
+
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .btn-rsvp {
+            display: inline-block;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            padding: 12px 35px;
+            background: linear-gradient(45deg, #4b0082, #8a2be2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-rsvp:hover {
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.8);
+            transform: translateY(-3px);
+            background: linear-gradient(45deg, #5c00a3, #9d4edd);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .subtitle { font-size: 1.1rem; }
+            .details-grid { grid-template-columns: 1fr; gap: 1rem; padding: 1rem 0;}
+            .content-container { margin: 1rem; padding: 1.5rem; }
+            
+            /* Permitir scroll en móvil para ver todo el contenido */
+            #ui-layer {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+                padding-top: 2rem;
+                padding-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Música de fondo: se reproduce automáticamente al iniciar el preloader -->
+    <audio id="bg-music" loop preload="auto" style="display: none;">
+        <!-- Cambia el src por la ruta de tu archivo de música -->
+        <source src="aura.mp3" type="audio/mpeg">
+        Tu navegador no soporta audio.
+    </audio>
+
+    <canvas id="bg"></canvas>
+
+    <!-- Preloader con frases (animación de escritura/borrado) -->
+    <div id="preloader">
+        <div class="preloader-content">
+            <p id="preloader-phrase" class="preloader-phrase"></p>
+        </div>
+    </div>
+
+    <div id="entry-screen">
+        <h2 class="text-white font-['Orbitron'] text-xl tracking-[0.3em] mb-8 text-center opacity-70">SISTEMA INICIADO</h2>
+        <button id="start-btn" class="btn-enter">Cruzar el Horizonte de Sucesos</button>
+    </div>
+
+    <div id="ui-layer">
+        <div class="content-container" id="main-card">
+            <p class="font-['Orbitron'] tracking-[5px] text-[#b388ff] text-sm mb-2 uppercase ui-elem">Una nueva órbita comienza</p>
+            <h1 class="ui-elem">MIS 17 AÑOS</h1>
+            <p class="subtitle ui-elem">La gravedad de este evento te atrae</p>
+            
+            <div class="details-grid ui-elem">
+                <div class="detail-item">
+                    <div class="detail-icon">📅</div>
+                    <div class="detail-label">Fecha Estelar</div>
+                    <div class="detail-value">20 de Noviembre</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-icon">⌚</div>
+                    <div class="detail-label">Tiempo Local</div>
+                    <div class="detail-value">20:00 hrs</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-icon">📍</div>
+                    <div class="detail-label">Coordenadas</div>
+                    <div class="detail-value">Salón Galaxia, C. 123</div>
+                </div>
+            </div>
+
+            <p class="mb-6 text-gray-300 max-w-md mx-auto ui-elem text-lg">
+                Prepárate para una noche inmersiva rodeado de amigos, buena música y misterios del universo. Tu presencia es crucial para estabilizar el sistema.
+            </p>
+
+            <a href="#" class="btn-rsvp ui-elem" onclick="confirmAssistance(event)">Confirmar Asistencia</a>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        // ========== PRELOADER (con escritura/borrado) Y MÚSICA ==========
+        (function() {
+            const phrases = [
+                "Cargando sistema estelar...",
+                "Estabilizando horizonte de sucesos...",
+                "Preparando invitación interdimensional...",
+                "Iniciando secuencia de cumpleaños..."
+            ];
+            const phraseEl = document.getElementById('preloader-phrase');
+            const preloader = document.getElementById('preloader');
+            const bgMusic = document.getElementById('bg-music');
+
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            async function typePhrase(element, phrase, typeSpeed = 60, deleteSpeed = 35, pauseAfterType = 1200) {
+                for (let i = 0; i <= phrase.length; i++) {
+                    element.textContent = phrase.substring(0, i);
+                    await delay(typeSpeed);
+                }
+                await delay(pauseAfterType);
+                for (let i = phrase.length; i >= 0; i--) {
+                    element.textContent = phrase.substring(0, i);
+                    await delay(deleteSpeed);
+                }
+                await delay(200);
+            }
+
+            async function startPreloader() {
+                // Intentar reproducir música automáticamente
+                try {
+                    await bgMusic.play();
+                } catch (err) {
+                    // El autoplay fue bloqueado: la música se iniciará con el primer clic/toque
+                    console.log("Autoplay bloqueado. La música comenzará con la interacción del usuario.");
+                    // Agregamos un listener global para iniciar la reproducción en la primera interacción
+                    const resumeAudio = () => {
+                        bgMusic.play().catch(() => {});
+                        document.removeEventListener('click', resumeAudio);
+                        document.removeEventListener('touchstart', resumeAudio);
+                    };
+                    document.addEventListener('click', resumeAudio);
+                    document.addEventListener('touchstart', resumeAudio);
+                }
+
+                for (const phrase of phrases) {
+                    await typePhrase(phraseEl, phrase);
+                }
+                gsap.to(preloader, {
+                    opacity: 0,
+                    duration: 0.8,
+                    onComplete: () => {
+                        preloader.style.display = 'none';
+                    }
+                });
+            }
+
+            window.addEventListener('load', () => {
+                setTimeout(startPreloader, 400);
+            });
+        })();
+
+        // ========== DETECCIÓN DE MÓVIL ==========
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        // ========== CONFIGURACIÓN ESCENA ==========
+        const canvas = document.querySelector('#bg');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x010005);
+        scene.fog = new THREE.FogExp2(0x010005, 0.0006);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 60);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !isMobile, alpha: false });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 2 : 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x010005, 1);
+
+        // ========== AGUJERO NEGRO REALISTA ==========
+        const bhGeometry = new THREE.SphereGeometry(5.2, isMobile ? 64 : 512, isMobile ? 64 : 512);
+        const bhMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x000000, 
+            emissive: 0x000000, 
+            roughness: 0.05, 
+            metalness: 0.98,
+            emissiveIntensity: 0
+        });
+        const blackHole = new THREE.Mesh(bhGeometry, bhMaterial);
+        scene.add(blackHole);
+
+        // Anillos de fotones (segmentos reducidos en móvil)
+        const photonSegments = isMobile ? 64 : 256;
+        const photonTubular = isMobile ? 200 : 600;
+        
+        const innerPhotonGeo = new THREE.TorusGeometry(5.45, 0.09, photonSegments, photonTubular);
+        const innerPhotonMat = new THREE.MeshStandardMaterial({ color: 0xfff5e0, emissive: 0x88aaff, emissiveIntensity: 0.9 });
+        const innerPhotonRing = new THREE.Mesh(innerPhotonGeo, innerPhotonMat);
+        innerPhotonRing.rotation.x = Math.PI / 2;
+        scene.add(innerPhotonRing);
+
+        const outerPhotonGeo = new THREE.TorusGeometry(5.8, 0.07, photonSegments, photonTubular);
+        const outerPhotonMat = new THREE.MeshStandardMaterial({ color: 0xcceeff, emissive: 0x5577aa, emissiveIntensity: 0.4 });
+        const outerPhotonRing = new THREE.Mesh(outerPhotonGeo, outerPhotonMat);
+        outerPhotonRing.rotation.x = Math.PI / 2;
+        scene.add(outerPhotonRing);
+
+        // ========== DISCO HORIZONTAL (PARTÍCULAS CALIENTES) ==========
+        const hotDiskCount = isMobile ? 2500 : 8000;
+        const hotDiskGeo = new THREE.BufferGeometry();
+        const hotPos = new Float32Array(hotDiskCount * 3);
+        const hotCol = new Float32Array(hotDiskCount * 3);
+        for (let i = 0; i < hotDiskCount; i++) {
+            const r = 5.8 + Math.random() * 2.5;
+            const a = Math.random() * Math.PI * 2;
+            const x = Math.cos(a) * r;
+            const z = Math.sin(a) * r;
+            const y = (Math.random() - 0.5) * 0.5;
+            hotPos[i*3] = x;
+            hotPos[i*3+1] = y;
+            hotPos[i*3+2] = z;
+            hotCol[i*3] = 1.0;
+            hotCol[i*3+1] = 0.95 + Math.random()*0.05;
+            hotCol[i*3+2] = 0.9 + Math.random()*0.1;
+        }
+        hotDiskGeo.setAttribute('position', new THREE.BufferAttribute(hotPos, 3));
+        hotDiskGeo.setAttribute('color', new THREE.BufferAttribute(hotCol, 3));
+        const hotDiskMat = new THREE.PointsMaterial({ size: isMobile ? 0.1 : 0.06, vertexColors: true, blending: THREE.AdditiveBlending });
+        const hotDisk = new THREE.Points(hotDiskGeo, hotDiskMat);
+        scene.add(hotDisk);
+
+        // ========== PARTÍCULAS DE ESTRELLAS ==========
+        const starDustCount = isMobile ? 2000 : 7500;
+        const starDustGeo = new THREE.BufferGeometry();
+        const starDustPos = new Float32Array(starDustCount * 3);
+        const starDustColors = new Float32Array(starDustCount * 3);
+        for (let i = 0; i < starDustCount; i++) {
+            const radius = 5.5 + Math.random() * 32;
+            const angle = Math.random() * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            const y = (Math.random() - 0.5) * 1.2;
+            starDustPos[i*3] = x;
+            starDustPos[i*3+1] = y;
+            starDustPos[i*3+2] = z;
+            const colorType = Math.random();
+            if (colorType < 0.7) {
+                starDustColors[i*3] = 0.8 + Math.random() * 0.2;
+                starDustColors[i*3+1] = 0.8 + Math.random() * 0.2;
+                starDustColors[i*3+2] = 1.0;
+            } else if (colorType < 0.9) {
+                starDustColors[i*3] = 1.0;
+                starDustColors[i*3+1] = 0.9 + Math.random() * 0.1;
+                starDustColors[i*3+2] = 0.7 + Math.random() * 0.2;
+            } else {
+                starDustColors[i*3] = 0.7 + Math.random() * 0.3;
+                starDustColors[i*3+1] = 0.7 + Math.random() * 0.3;
+                starDustColors[i*3+2] = 0.8 + Math.random() * 0.2;
+            }
+        }
+        starDustGeo.setAttribute('position', new THREE.BufferAttribute(starDustPos, 3));
+        starDustGeo.setAttribute('color', new THREE.BufferAttribute(starDustColors, 3));
+        const starDustMat = new THREE.PointsMaterial({ size: isMobile ? 0.12 : 0.07, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+        const starDustField = new THREE.Points(starDustGeo, starDustMat);
+        scene.add(starDustField);
+
+        // Residuos espaciales
+        const debrisCount = isMobile ? 1200 : 4000;
+        const debrisGeo = new THREE.BufferGeometry();
+        const debrisPos = new Float32Array(debrisCount * 3);
+        const debrisColors = new Float32Array(debrisCount * 3);
+        for (let i = 0; i < debrisCount; i++) {
+            const radius = 7 + Math.random() * 28;
+            const angle = Math.random() * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            const y = (Math.random() - 0.5) * 2.5;
+            debrisPos[i*3] = x;
+            debrisPos[i*3+1] = y;
+            debrisPos[i*3+2] = z;
+            debrisColors[i*3] = 0.6 + Math.random() * 0.4;
+            debrisColors[i*3+1] = 0.5 + Math.random() * 0.4;
+            debrisColors[i*3+2] = 0.5 + Math.random() * 0.3;
+        }
+        debrisGeo.setAttribute('position', new THREE.BufferAttribute(debrisPos, 3));
+        debrisGeo.setAttribute('color', new THREE.BufferAttribute(debrisColors, 3));
+        const debrisMat = new THREE.PointsMaterial({ size: isMobile ? 0.2 : 0.12, vertexColors: true, transparent: true, opacity: 0.6 });
+        const debrisField = new THREE.Points(debrisGeo, debrisMat);
+        scene.add(debrisField);
+
+        // Estrellas lejanas
+        const starCount = isMobile ? 2000 : 6000;
+        const starGeo = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+            starPositions[i*3] = (Math.random() - 0.5) * 450;
+            starPositions[i*3+1] = (Math.random() - 0.5) * 280;
+            starPositions[i*3+2] = (Math.random() - 0.5) * 180 - 50;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: isMobile ? 0.3 : 0.18, transparent: true, blending: THREE.AdditiveBlending });
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+        
+        // Estrellas muy lejanas
+        const starFarCount = isMobile ? 1500 : 4000;
+        const starFarGeo = new THREE.BufferGeometry();
+        const starFarPos = new Float32Array(starFarCount * 3);
+        for (let i = 0; i < starFarCount; i++) {
+            starFarPos[i*3] = (Math.random() - 0.5) * 600;
+            starFarPos[i*3+1] = (Math.random() - 0.5) * 400;
+            starFarPos[i*3+2] = (Math.random() - 0.5) * 300 - 150;
+        }
+        starFarGeo.setAttribute('position', new THREE.BufferAttribute(starFarPos, 3));
+        const starFarMat = new THREE.PointsMaterial({ color: 0xaaccff, size: isMobile ? 0.15 : 0.09, transparent: true, opacity: 0.5 });
+        const starsFar = new THREE.Points(starFarGeo, starFarMat);
+        scene.add(starsFar);
+
+        // Polvo fino ambiental
+        const fineDustCount = isMobile ? 2500 : 8000;
+        const fineDustGeo = new THREE.BufferGeometry();
+        const fineDustPos = new Float32Array(fineDustCount * 3);
+        for (let i = 0; i < fineDustCount; i++) {
+            fineDustPos[i*3] = (Math.random() - 0.5) * 90;
+            fineDustPos[i*3+1] = (Math.random() - 0.5) * 50;
+            fineDustPos[i*3+2] = (Math.random() - 0.5) * 80;
+        }
+        fineDustGeo.setAttribute('position', new THREE.BufferAttribute(fineDustPos, 3));
+        const fineDustMat = new THREE.PointsMaterial({ color: 0xaaccff, size: isMobile ? 0.08 : 0.04, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending });
+        const fineDustField = new THREE.Points(fineDustGeo, fineDustMat);
+        scene.add(fineDustField);
+
+        // ========== CINTURÓN DE ASTEROIDES ==========
+        const asteroidCount = isMobile ? 2500 : 8000;
+        const asteroidGeo = new THREE.BufferGeometry();
+        const asteroidPositions = new Float32Array(asteroidCount * 3);
+        for (let i = 0; i < asteroidCount; i++) {
+            const r = 12 + Math.random() * 22;
+            const a = Math.random() * Math.PI * 2;
+            const y = (Math.random() - 0.5) * 3.5;
+            asteroidPositions[i*3] = Math.cos(a) * r;
+            asteroidPositions[i*3+1] = y;
+            asteroidPositions[i*3+2] = Math.sin(a) * r;
+        }
+        asteroidGeo.setAttribute('position', new THREE.BufferAttribute(asteroidPositions, 3));
+        const asteroidMat = new THREE.PointsMaterial({ color: 0xaa9988, size: isMobile ? 0.12 : 0.07, transparent: true });
+        const asteroidBelt = new THREE.Points(asteroidGeo, asteroidMat);
+        scene.add(asteroidBelt);
+
+        // ========== METEORITOS DETALLADOS ==========
+        function createSharedRockTexture() {
+            const size = isMobile ? 256 : 1024;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#b0a090';
+            ctx.fillRect(0, 0, size, size);
+            const iterations = isMobile ? 3000 : 12000;
+            for (let i = 0; i < iterations; i++) {
+                ctx.fillStyle = `rgba(40,40,55,${Math.random() * 0.7})`;
+                ctx.fillRect(Math.floor(Math.random() * size), Math.floor(Math.random() * size), Math.random() * 6 + 1, Math.random() * 6 + 1);
+            }
+            const lineIter = isMobile ? 500 : 1500;
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = isMobile ? 2 : 3;
+            for (let i = 0; i < lineIter; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * size, Math.random() * size);
+                ctx.lineTo(Math.random() * size, Math.random() * size);
+                ctx.stroke();
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(2, 2);
+            return tex;
+        }
+        const sharedRockTex = createSharedRockTexture();
+
+        const meteoriteCount = isMobile ? 15 : 55;
+        const meteorites = [];
+        for (let i = 0; i < meteoriteCount; i++) {
+            const geom = new THREE.DodecahedronGeometry(0.7, 0);
+            const mat = new THREE.MeshStandardMaterial({ 
+                map: sharedRockTex, 
+                color: new THREE.Color(`hsl(${30 + Math.random() * 20}, ${20 + Math.random() * 30}%, ${40 + Math.random() * 30}%)`), 
+                roughness: 0.85, 
+                metalness: 0.05 
+            });
+            const meteor = new THREE.Mesh(geom, mat);
+            const scale = 0.5 + Math.random() * 1.4;
+            meteor.scale.set(scale, scale * (0.7 + Math.random()), scale * (0.8 + Math.random()));
+            const orbit = 7 + Math.random() * 30;
+            meteor.userData = {
+                radius: orbit, 
+                angle: Math.random() * Math.PI * 2, 
+                speed: 0.0008 + Math.random() * 0.0035,
+                tilt: (Math.random() - 0.5) * 0.8, 
+                rotSpeed: new THREE.Vector3((Math.random()-0.5)*0.015, (Math.random()-0.5)*0.015, (Math.random()-0.5)*0.015)
+            };
+            scene.add(meteor);
+            meteorites.push(meteor);
+        }
+
+        // ========== PLANETAS HIPERREALISTAS ==========
+        function createPlanetTextureAdvanced(base, stripe, hasSpots, spotColor, cloudColor) {
+            const size = isMobile ? 512 : 2048;
+            const canvas = document.createElement('canvas'); 
+            canvas.width = size; 
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = base; 
+            ctx.fillRect(0, 0, size, size);
+            if (stripe) {
+                const stripeHeight = size / 25;
+                for (let i = 0; i < 25; i++) {
+                    ctx.fillStyle = stripe;
+                    ctx.fillRect(0, i * stripeHeight + Math.sin(i) * (size/130), size, stripeHeight * 0.6);
+                }
+            }
+            if (hasSpots && spotColor) {
+                const spotCount = isMobile ? 20 : 80;
+                for (let s = 0; s < spotCount; s++) {
+                    ctx.beginPath();
+                    ctx.ellipse(Math.random() * size, Math.random() * size, (size/100) + Math.random() * (size/30), (size/130) + Math.random() * (size/50), 0, 0, Math.PI*2);
+                    ctx.fillStyle = spotColor; 
+                    ctx.fill();
+                }
+            }
+            if (cloudColor) {
+                const cloudCount = isMobile ? 500 : 2000;
+                for (let c = 0; c < cloudCount; c++) {
+                    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.3})`;
+                    ctx.fillRect(Math.random() * size, Math.random() * size, Math.random() * (size/170), Math.random() * (size/250));
+                }
+            }
+            const noiseCount = isMobile ? 4000 : 15000;
+            for (let n = 0; n < noiseCount; n++) {
+                ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.25})`;
+                ctx.fillRect(Math.random() * size, Math.random() * size, 2, 2);
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping; 
+            return tex;
+        }
+        const planetsData = [
+            { name: 'Mercurio', base: '#c8b28c', stripe: null, spots: false, spot: null, cloud: null, size: 0.85, rMin: 13.5, rMax: 15.5, speed: 0.0035 },
+            { name: 'Venus', base: '#f0d898', stripe: '#dbb45c', spots: false, cloud: '#fff8e0', size: 0.95, rMin: 16.5, rMax: 18.5, speed: 0.0029 },
+            { name: 'Tierra', base: '#3a8cba', stripe: '#6abf6e', spots: false, cloud: '#ffffff', size: 1.02, rMin: 19.5, rMax: 21.5, speed: 0.0026 },
+            { name: 'Marte', base: '#d46c42', stripe: '#a84228', spots: true, spot: '#6b3018', cloud: null, size: 0.94, rMin: 22.5, rMax: 24.5, speed: 0.0023 },
+            { name: 'Júpiter', base: '#e0b07a', stripe: '#c88a54', spots: true, spot: '#b84c2a', cloud: null, size: 1.65, rMin: 26.5, rMax: 29.5, speed: 0.0016 },
+            { name: 'Saturno', base: '#f5e0c0', stripe: '#d4b48c', spots: false, cloud: null, size: 1.48, rMin: 30.5, rMax: 33.5, speed: 0.0013 },
+            { name: 'Urano', base: '#b8eaf0', stripe: '#8cccd8', spots: false, cloud: null, size: 1.22, rMin: 34.5, rMax: 37.5, speed: 0.0010 },
+            { name: 'Neptuno', base: '#4a7ae8', stripe: '#2a5090', spots: true, spot: '#1a2a60', cloud: null, size: 1.22, rMin: 38.5, rMax: 41.5, speed: 0.00085 }
+        ];
+        const planetSphereSegments = isMobile ? 64 : 256;
+        const planets = [];
+        planetsData.forEach(p => {
+            const tex = createPlanetTextureAdvanced(p.base, p.stripe, p.spots, p.spot, p.cloud);
+            const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4, metalness: 0.05 });
+            const planet = new THREE.Mesh(new THREE.SphereGeometry(p.size, planetSphereSegments, planetSphereSegments), mat);
+            const orbit = p.rMin + Math.random() * (p.rMax - p.rMin);
+            planet.userData = {
+                radius: orbit, angle: Math.random() * Math.PI * 2, speed: p.speed + (Math.random() * 0.0002),
+                tilt: (Math.random() - 0.5) * 0.3, rotSpeed: new THREE.Vector3(0.002, 0.003, 0.001)
+            };
+            scene.add(planet); planets.push(planet);
+            if (p.name === 'Saturno') {
+                const ringSegments = isMobile ? 64 : 128;
+                const ringTubular = isMobile ? 100 : 300;
+                const ring = new THREE.Mesh(
+                    new THREE.TorusGeometry(p.size * 1.32, 0.32, ringSegments, ringTubular), 
+                    new THREE.MeshStandardMaterial({ color: 0xd4bc9a, roughness: 0.3, metalness: 0.2, transparent: true, opacity: 0.8 })
+                );
+                ring.rotation.x = Math.PI / 2.2; ring.rotation.z = 0.5; planet.add(ring);
+                const ringThin = new THREE.Mesh(
+                    new THREE.TorusGeometry(p.size * 1.45, 0.12, ringSegments, ringTubular), 
+                    new THREE.MeshStandardMaterial({ color: 0xc4aa82, roughness: 0.4, transparent: true })
+                );
+                ringThin.rotation.x = Math.PI / 2.3; planet.add(ringThin);
+            }
+        });
+
+        // ========== NEBULOSAS DE FONDO ==========
+        const nebulaLayers = [
+            { color: 0x8844aa, radius: 90, opacity: 0.08, yOffset: -15 },
+            { color: 0x2266cc, radius: 120, opacity: 0.06, yOffset: 20 },
+            { color: 0xaa4488, radius: 110, opacity: 0.07, yOffset: -5 }
+        ];
+        const nebulaCount = isMobile ? 800 : 2500;
+        nebulaLayers.forEach(layer => {
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(nebulaCount * 3);
+            for (let i = 0; i < nebulaCount; i++) {
+                const r = layer.radius * Math.random();
+                const a = Math.random() * Math.PI * 2;
+                pos[i*3] = Math.cos(a) * r;
+                pos[i*3+1] = layer.yOffset + (Math.random() - 0.5) * 30;
+                pos[i*3+2] = Math.sin(a) * r - 60;
+            }
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const mat = new THREE.PointsMaterial({ color: layer.color, size: isMobile ? 0.6 : 0.35, transparent: true, opacity: layer.opacity, blending: THREE.AdditiveBlending });
+            const nebula = new THREE.Points(geo, mat);
+            scene.add(nebula);
+        });
+
+        // ========== ILUMINACIÓN ==========
+        const ambientLight = new THREE.AmbientLight(0x221133);
+        scene.add(ambientLight);
+        const centerLight = new THREE.PointLight(0xffaa77, 1.4, 55);
+        centerLight.position.set(0, 0, 0);
+        scene.add(centerLight);
+        const fillLight = new THREE.PointLight(0x88aaff, 0.7);
+        fillLight.position.set(15, 20, 25);
+        scene.add(fillLight);
+        const backLight = new THREE.DirectionalLight(0xaa88ff, 0.5);
+        backLight.position.set(-5, 10, -20);
+        scene.add(backLight);
+        const rimLight = new THREE.PointLight(0xffcc88, 0.8);
+        rimLight.position.set(12, 8, 18);
+        scene.add(rimLight);
+
+        // ========== ANIMACIONES ==========
+        let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth/2) * 0.045;
+            mouseY = (e.clientY - window.innerHeight/2) * 0.04;
+        });
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        let globalTime = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            globalTime += 0.016;
+            
+            starDustField.rotation.y += 0.0005;
+            debrisField.rotation.y += 0.0003;
+            fineDustField.rotation.x += 0.0002;
+            hotDisk.rotation.y += 0.001;
+            asteroidBelt.rotation.y += 0.0005;
+            stars.rotation.y += 0.0001;
+            starsFar.rotation.x += 0.00005;
+            innerPhotonRing.rotation.z += 0.004;
+            outerPhotonRing.rotation.z -= 0.002;
+            
+            const pulse = 1 + Math.sin(globalTime * 5) * 0.02;
+            innerPhotonRing.scale.set(pulse, pulse, 1);
+            
+            centerLight.intensity = 1.3 + Math.sin(globalTime * 2.5) * 0.3;
+            
+            [...meteorites, ...planets].forEach(obj => {
+                obj.userData.angle -= obj.userData.speed;
+                const rad = obj.userData.radius;
+                const ang = obj.userData.angle;
+                const tilt = obj.userData.tilt || 0;
+                obj.position.x = Math.cos(ang) * rad;
+                obj.position.z = Math.sin(ang) * rad;
+                obj.position.y = Math.sin(ang) * rad * tilt;
+                obj.rotateX(obj.userData.rotSpeed?.x || 0.005);
+                obj.rotateY(obj.userData.rotSpeed?.y || 0.008);
+                obj.rotateZ(obj.userData.rotSpeed?.z || 0.003);
+            });
+            
+            targetX = mouseX * 0.7;
+            targetY = mouseY * 0.5;
+            camera.position.x += (targetX - camera.position.x) * 0.04;
+            camera.position.y += (-targetY - camera.position.y + 4.5) * 0.04;
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // ========== GSAP Y UI ==========
+        const startBtn = document.getElementById('start-btn');
+        const entryScreen = document.getElementById('entry-screen');
+        const mainCard = document.getElementById('main-card');
+        const uiElems = document.querySelectorAll('.ui-elem');
+        startBtn.addEventListener('click', () => {
+            entryScreen.style.opacity = '0';
+            setTimeout(() => { entryScreen.style.display = 'none'; }, 1500);
+            gsap.to(camera.position, { z: 26, y: 6, duration: 3.5, ease: "power3.inOut" });
+            gsap.to(mainCard, { opacity: 1, y: 0, duration: 1.6, delay: 1.6, ease: "back.out(1.1)" });
+            gsap.fromTo(uiElems, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, stagger: 0.15, delay: 2.1, ease: "power2.out" });
+        });
+        function confirmAssistance(e) {
+            e.preventDefault(); const btn = e.target; const orig = btn.innerText;
+            gsap.to(btn, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
+            btn.innerText = "¡Confirmado! 🚀"; btn.style.background = "linear-gradient(45deg, #00b09b, #96c93d)"; btn.style.boxShadow = "0 0 45px rgba(0,255,100,0.7)";
+            setTimeout(() => { btn.innerText = orig; btn.style.background = ""; btn.style.boxShadow = ""; }, 3000);
+        }
+    </script>
+</body>
+</html>
