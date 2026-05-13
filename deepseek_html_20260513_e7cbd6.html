@@ -40,7 +40,7 @@
             display: block;
         }
 
-        /* Preloader: oculto hasta que el usuario pulse el botón */
+        /* Preloader */
         #preloader {
             position: fixed;
             top: 0;
@@ -49,7 +49,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.92);
             z-index: 200;
-            display: none; /* se muestra al hacer clic */
+            display: none; /* Oculto hasta que se pulse el botón */
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(3px);
@@ -232,7 +232,6 @@
             .details-grid { grid-template-columns: 1fr; gap: 1rem; padding: 1rem 0;}
             .content-container { margin: 1rem; padding: 1.5rem; }
             
-            /* Permitir scroll en móvil para ver todo el contenido */
             #ui-layer {
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
@@ -245,15 +244,14 @@
 </head>
 <body>
 
-    <!-- Música de fondo (se reproduce al iniciar el preloader) -->
     <audio id="bg-music" loop preload="auto" style="display: none;">
-        <source src="aura.mp3" type="audio/mpeg" onerror="console.warn('No se pudo cargar aura.mp3. Asegúrate de que el archivo existe.')">
+        <source src="aura.mp3" type="audio/mpeg">
         Tu navegador no soporta audio.
     </audio>
 
     <canvas id="bg"></canvas>
 
-    <!-- Preloader con frases (aparece después de pulsar "Cruzar el Horizonte") -->
+    <!-- Preloader (ahora se mostrará al pulsar el botón) -->
     <div id="preloader">
         <div class="preloader-content">
             <p id="preloader-phrase" class="preloader-phrase"></p>
@@ -301,72 +299,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
-        // ========== PRELOADER CON FRASES (se ejecuta al hacer clic) ==========
-        (function() {
-            const phrases = [
-                "Cargando sistema estelar...",
-                "Estabilizando horizonte de sucesos...",
-                "Preparando invitación interdimensional...",
-                "Iniciando secuencia de cumpleaños..."
-            ];
-            const phraseEl = document.getElementById('preloader-phrase');
-            const preloader = document.getElementById('preloader');
-            const bgMusic = document.getElementById('bg-music');
-
-            function delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
-
-            async function typePhrase(element, phrase, typeSpeed = 60, deleteSpeed = 35, pauseAfterType = 1200) {
-                for (let i = 0; i <= phrase.length; i++) {
-                    element.textContent = phrase.substring(0, i);
-                    await delay(typeSpeed);
-                }
-                await delay(pauseAfterType);
-                for (let i = phrase.length; i >= 0; i--) {
-                    element.textContent = phrase.substring(0, i);
-                    await delay(deleteSpeed);
-                }
-                await delay(200);
-            }
-
-            window.startPreloaderAndAnimations = async function() {
-                // Mostrar preloader
-                preloader.style.display = 'flex';
-                
-                // Iniciar música (ahora con interacción del usuario, no fallará)
-                try {
-                    await bgMusic.play();
-                    console.log("Música iniciada correctamente.");
-                } catch (err) {
-                    console.warn("No se pudo reproducir música:", err);
-                }
-
-                // Ejecutar las frases
-                for (const phrase of phrases) {
-                    await typePhrase(phraseEl, phrase);
-                }
-
-                // Ocultar preloader con fade
-                gsap.to(preloader, {
-                    opacity: 0,
-                    duration: 0.8,
-                    onComplete: () => {
-                        preloader.style.display = 'none';
-                        // Ocultar pantalla de entrada y lanzar animaciones principales
-                        document.getElementById('entry-screen').style.opacity = '0';
-                        setTimeout(() => { 
-                            document.getElementById('entry-screen').style.display = 'none'; 
-                        }, 1500);
-                        
-                        gsap.to(camera.position, { z: 26, y: 6, duration: 3.5, ease: "power3.inOut" });
-                        gsap.to(mainCard, { opacity: 1, y: 0, duration: 1.6, delay: 1.6, ease: "back.out(1.1)" });
-                        gsap.fromTo(uiElems, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, stagger: 0.15, delay: 2.1, ease: "power2.out" });
-                    }
-                });
-            };
-        })();
-
         // ========== DETECCIÓN DE MÓVIL ==========
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
@@ -396,7 +328,6 @@
         const blackHole = new THREE.Mesh(bhGeometry, bhMaterial);
         scene.add(blackHole);
 
-        // Anillos de fotones (segmentos reducidos en móvil)
         const photonSegments = isMobile ? 64 : 256;
         const photonTubular = isMobile ? 200 : 600;
         
@@ -412,7 +343,6 @@
         outerPhotonRing.rotation.x = Math.PI / 2;
         scene.add(outerPhotonRing);
 
-        // ========== DISCO HORIZONTAL (PARTÍCULAS CALIENTES) ==========
         const hotDiskCount = isMobile ? 2500 : 8000;
         const hotDiskGeo = new THREE.BufferGeometry();
         const hotPos = new Float32Array(hotDiskCount * 3);
@@ -436,7 +366,6 @@
         const hotDisk = new THREE.Points(hotDiskGeo, hotDiskMat);
         scene.add(hotDisk);
 
-        // ========== PARTÍCULAS DE ESTRELLAS ==========
         const starDustCount = isMobile ? 2000 : 7500;
         const starDustGeo = new THREE.BufferGeometry();
         const starDustPos = new Float32Array(starDustCount * 3);
@@ -471,7 +400,6 @@
         const starDustField = new THREE.Points(starDustGeo, starDustMat);
         scene.add(starDustField);
 
-        // Residuos espaciales
         const debrisCount = isMobile ? 1200 : 4000;
         const debrisGeo = new THREE.BufferGeometry();
         const debrisPos = new Float32Array(debrisCount * 3);
@@ -495,7 +423,6 @@
         const debrisField = new THREE.Points(debrisGeo, debrisMat);
         scene.add(debrisField);
 
-        // Estrellas lejanas
         const starCount = isMobile ? 2000 : 6000;
         const starGeo = new THREE.BufferGeometry();
         const starPositions = new Float32Array(starCount * 3);
@@ -509,7 +436,6 @@
         const stars = new THREE.Points(starGeo, starMat);
         scene.add(stars);
         
-        // Estrellas muy lejanas
         const starFarCount = isMobile ? 1500 : 4000;
         const starFarGeo = new THREE.BufferGeometry();
         const starFarPos = new Float32Array(starFarCount * 3);
@@ -523,7 +449,6 @@
         const starsFar = new THREE.Points(starFarGeo, starFarMat);
         scene.add(starsFar);
 
-        // Polvo fino ambiental
         const fineDustCount = isMobile ? 2500 : 8000;
         const fineDustGeo = new THREE.BufferGeometry();
         const fineDustPos = new Float32Array(fineDustCount * 3);
@@ -537,7 +462,6 @@
         const fineDustField = new THREE.Points(fineDustGeo, fineDustMat);
         scene.add(fineDustField);
 
-        // ========== CINTURÓN DE ASTEROIDES ==========
         const asteroidCount = isMobile ? 2500 : 8000;
         const asteroidGeo = new THREE.BufferGeometry();
         const asteroidPositions = new Float32Array(asteroidCount * 3);
@@ -554,7 +478,6 @@
         const asteroidBelt = new THREE.Points(asteroidGeo, asteroidMat);
         scene.add(asteroidBelt);
 
-        // ========== METEORITOS DETALLADOS ==========
         function createSharedRockTexture() {
             const size = isMobile ? 256 : 1024;
             const canvas = document.createElement('canvas');
@@ -610,7 +533,6 @@
             meteorites.push(meteor);
         }
 
-        // ========== PLANETAS HIPERREALISTAS ==========
         function createPlanetTextureAdvanced(base, stripe, hasSpots, spotColor, cloudColor) {
             const size = isMobile ? 512 : 2048;
             const canvas = document.createElement('canvas'); 
@@ -689,7 +611,6 @@
             }
         });
 
-        // ========== NEBULOSAS DE FONDO ==========
         const nebulaLayers = [
             { color: 0x8844aa, radius: 90, opacity: 0.08, yOffset: -15 },
             { color: 0x2266cc, radius: 120, opacity: 0.06, yOffset: 20 },
@@ -712,7 +633,6 @@
             scene.add(nebula);
         });
 
-        // ========== ILUMINACIÓN ==========
         const ambientLight = new THREE.AmbientLight(0x221133);
         scene.add(ambientLight);
         const centerLight = new THREE.PointLight(0xffaa77, 1.4, 55);
@@ -728,7 +648,6 @@
         rimLight.position.set(12, 8, 18);
         scene.add(rimLight);
 
-        // ========== ANIMACIONES ==========
         let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
         document.addEventListener('mousemove', (e) => {
             mouseX = (e.clientX - window.innerWidth/2) * 0.045;
@@ -783,21 +702,101 @@
         }
         animate();
 
-        // ========== BOTÓN PRINCIPAL ==========
+        // ========== PRELOADER (ahora se activa bajo demanda) ==========
+        const phrases = [
+            "Cargando sistema estelar...",
+            "Estabilizando horizonte de sucesos...",
+            "Preparando invitación interdimensional...",
+            "Iniciando secuencia de cumpleaños..."
+        ];
+        const phraseEl = document.getElementById('preloader-phrase');
+        const preloader = document.getElementById('preloader');
+        const bgMusic = document.getElementById('bg-music');
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function typePhrase(element, phrase, typeSpeed = 60, deleteSpeed = 35, pauseAfterType = 1200) {
+            for (let i = 0; i <= phrase.length; i++) {
+                element.textContent = phrase.substring(0, i);
+                await delay(typeSpeed);
+            }
+            await delay(pauseAfterType);
+            for (let i = phrase.length; i >= 0; i--) {
+                element.textContent = phrase.substring(0, i);
+                await delay(deleteSpeed);
+            }
+            await delay(200);
+        }
+
+        async function startPreloaderSequence() {
+            // Mostrar preloader
+            preloader.style.display = 'flex';
+            preloader.style.opacity = '1';
+            
+            // Intentar reproducir música (ahora con interacción del usuario)
+            try {
+                await bgMusic.play();
+                console.log("Música iniciada tras el clic.");
+            } catch (err) {
+                console.warn("No se pudo reproducir música:", err);
+            }
+
+            for (const phrase of phrases) {
+                await typePhrase(phraseEl, phrase);
+            }
+            
+            // Desvanecer y ocultar preloader
+            return new Promise(resolve => {
+                gsap.to(preloader, {
+                    opacity: 0,
+                    duration: 0.8,
+                    onComplete: () => {
+                        preloader.style.display = 'none';
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        // ========== BOTÓN DE ENTRADA (ahora activa preloader y luego la escena) ==========
         const startBtn = document.getElementById('start-btn');
+        const entryScreen = document.getElementById('entry-screen');
         const mainCard = document.getElementById('main-card');
         const uiElems = document.querySelectorAll('.ui-elem');
+        
+        let sequenceLaunched = false;
+        startBtn.addEventListener('click', async () => {
+            if (sequenceLaunched) return;
+            sequenceLaunched = true;
 
-        startBtn.addEventListener('click', () => {
-            // Llamar al preloader y luego las animaciones
-            startPreloaderAndAnimations();
+            // Ocultar pantalla de entrada inmediatamente
+            entryScreen.style.opacity = '0';
+            setTimeout(() => { entryScreen.style.display = 'none'; }, 800);
+
+            // Esperar a que termine el preloader
+            await startPreloaderSequence();
+
+            // Iniciar animaciones de la invitación
+            gsap.to(camera.position, { z: 26, y: 6, duration: 3.5, ease: "power3.inOut" });
+            gsap.to(mainCard, { opacity: 1, y: 0, duration: 1.6, delay: 1.6, ease: "back.out(1.1)" });
+            gsap.fromTo(uiElems, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, stagger: 0.15, delay: 2.1, ease: "power2.out" });
         });
 
         function confirmAssistance(e) {
-            e.preventDefault(); const btn = e.target; const orig = btn.innerText;
+            e.preventDefault(); 
+            const btn = e.target; 
+            const orig = btn.innerText;
             gsap.to(btn, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
-            btn.innerText = "¡Confirmado! 🚀"; btn.style.background = "linear-gradient(45deg, #00b09b, #96c93d)"; btn.style.boxShadow = "0 0 45px rgba(0,255,100,0.7)";
-            setTimeout(() => { btn.innerText = orig; btn.style.background = ""; btn.style.boxShadow = ""; }, 3000);
+            btn.innerText = "¡Confirmado! 🚀"; 
+            btn.style.background = "linear-gradient(45deg, #00b09b, #96c93d)"; 
+            btn.style.boxShadow = "0 0 45px rgba(0,255,100,0.7)";
+            setTimeout(() => { 
+                btn.innerText = orig; 
+                btn.style.background = ""; 
+                btn.style.boxShadow = ""; 
+            }, 3000);
         }
     </script>
 </body>
