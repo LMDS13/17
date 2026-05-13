@@ -40,7 +40,7 @@
             display: block;
         }
 
-        /* Preloader */
+        /* Preloader: oculto hasta que el usuario pulse el botón */
         #preloader {
             position: fixed;
             top: 0;
@@ -49,7 +49,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.92);
             z-index: 200;
-            display: flex;
+            display: none; /* se muestra al hacer clic */
             justify-content: center;
             align-items: center;
             backdrop-filter: blur(3px);
@@ -245,7 +245,7 @@
 </head>
 <body>
 
-    <!-- Música de fondo: se intenta reproducir automáticamente al cargar -->
+    <!-- Música de fondo (se reproduce al iniciar el preloader) -->
     <audio id="bg-music" loop preload="auto" style="display: none;">
         <source src="aura.mp3" type="audio/mpeg" onerror="console.warn('No se pudo cargar aura.mp3. Asegúrate de que el archivo existe.')">
         Tu navegador no soporta audio.
@@ -253,7 +253,7 @@
 
     <canvas id="bg"></canvas>
 
-    <!-- Preloader con frases (animación de escritura/borrado) -->
+    <!-- Preloader con frases (aparece después de pulsar "Cruzar el Horizonte") -->
     <div id="preloader">
         <div class="preloader-content">
             <p id="preloader-phrase" class="preloader-phrase"></p>
@@ -301,7 +301,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <script>
-        // ========== PRELOADER (con escritura/borrado) Y MÚSICA ==========
+        // ========== PRELOADER CON FRASES (se ejecuta al hacer clic) ==========
         (function() {
             const phrases = [
                 "Cargando sistema estelar...",
@@ -330,48 +330,41 @@
                 await delay(200);
             }
 
-            async function startPreloader() {
-                // Esperar a que el audio esté listo para reproducir
-                if (bgMusic.readyState < 3) {
-                    await new Promise((resolve) => {
-                        bgMusic.addEventListener('canplaythrough', resolve, { once: true });
-                        // Si después de 3 segundos no carga, seguir igual
-                        setTimeout(resolve, 3000);
-                    });
-                }
-
-                // Intentar reproducción automática
+            window.startPreloaderAndAnimations = async function() {
+                // Mostrar preloader
+                preloader.style.display = 'flex';
+                
+                // Iniciar música (ahora con interacción del usuario, no fallará)
                 try {
                     await bgMusic.play();
-                    console.log("Música iniciada automáticamente.");
+                    console.log("Música iniciada correctamente.");
                 } catch (err) {
-                    console.log("Autoplay bloqueado. La música comenzará con la primera interacción.");
-                    // Listener para el primer toque/clic del usuario
-                    const resumeAudio = () => {
-                        bgMusic.play().catch(() => {});
-                        document.removeEventListener('click', resumeAudio);
-                        document.removeEventListener('touchstart', resumeAudio);
-                    };
-                    document.addEventListener('click', resumeAudio);
-                    document.addEventListener('touchstart', resumeAudio);
+                    console.warn("No se pudo reproducir música:", err);
                 }
 
-                // Ejecutar frases del preloader
+                // Ejecutar las frases
                 for (const phrase of phrases) {
                     await typePhrase(phraseEl, phrase);
                 }
+
+                // Ocultar preloader con fade
                 gsap.to(preloader, {
                     opacity: 0,
                     duration: 0.8,
                     onComplete: () => {
                         preloader.style.display = 'none';
+                        // Ocultar pantalla de entrada y lanzar animaciones principales
+                        document.getElementById('entry-screen').style.opacity = '0';
+                        setTimeout(() => { 
+                            document.getElementById('entry-screen').style.display = 'none'; 
+                        }, 1500);
+                        
+                        gsap.to(camera.position, { z: 26, y: 6, duration: 3.5, ease: "power3.inOut" });
+                        gsap.to(mainCard, { opacity: 1, y: 0, duration: 1.6, delay: 1.6, ease: "back.out(1.1)" });
+                        gsap.fromTo(uiElems, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, stagger: 0.15, delay: 2.1, ease: "power2.out" });
                     }
                 });
-            }
-
-            window.addEventListener('load', () => {
-                setTimeout(startPreloader, 400);
-            });
+            };
         })();
 
         // ========== DETECCIÓN DE MÓVIL ==========
@@ -790,24 +783,16 @@
         }
         animate();
 
-        // ========== GSAP Y UI (con refuerzo de reproducción) ==========
+        // ========== BOTÓN PRINCIPAL ==========
         const startBtn = document.getElementById('start-btn');
-        const entryScreen = document.getElementById('entry-screen');
         const mainCard = document.getElementById('main-card');
         const uiElems = document.querySelectorAll('.ui-elem');
-        startBtn.addEventListener('click', () => {
-            // Forzar la música si aún no ha comenzado (respaldo para móviles)
-            const bgMusic = document.getElementById('bg-music');
-            if (bgMusic && bgMusic.paused) {
-                bgMusic.play().catch(() => {});
-            }
 
-            entryScreen.style.opacity = '0';
-            setTimeout(() => { entryScreen.style.display = 'none'; }, 1500);
-            gsap.to(camera.position, { z: 26, y: 6, duration: 3.5, ease: "power3.inOut" });
-            gsap.to(mainCard, { opacity: 1, y: 0, duration: 1.6, delay: 1.6, ease: "back.out(1.1)" });
-            gsap.fromTo(uiElems, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1, stagger: 0.15, delay: 2.1, ease: "power2.out" });
+        startBtn.addEventListener('click', () => {
+            // Llamar al preloader y luego las animaciones
+            startPreloaderAndAnimations();
         });
+
         function confirmAssistance(e) {
             e.preventDefault(); const btn = e.target; const orig = btn.innerText;
             gsap.to(btn, { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
